@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>Upload</title>
+</head>
+<style>
+    @font-face {
+        font-family: 'Material Icons Round';
+        font-style: normal;
+        font-weight: 400;
+        src: url(https://fonts.gstatic.com/s/materialiconsround/v54/LDItaoyNOAY6Uewc665JcIzCKsKc_M9flwmP.woff2) format('woff2');
+    }
+
+    .material-icons-round {
+        font-family: 'Material Icons Round';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+        font-family: Arial, serif;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        border: solid 1px darkgrey;
+    }
+
+    #dropZone {
+        height: 50px;
+        background: aquamarine;
+    }
+</style>
+<script>
+    window.onload = () => {
+        const dropZone = document.getElementById("dropZone")
+        document.querySelector("html").ondragover = function (e) {
+            console.log("dragover nad dokumentem html")
+            e.preventDefault(); // usuwa domyślne zachowanie strony po wykonaniu zdarzenia, warto zakomentować i sprawdzić
+            e.stopPropagation(); // zatrzymuje dalszą propagację zdarzenia, warto zakomentować i sprawdzić
+        }
+
+
+        document.querySelector("html").ondrop = function (e) {
+            console.log("drop na dokumencie html")
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        document.querySelector("#dropZone").ondrop = function (e) {
+
+            console.log("drop na divie")
+            e.stopPropagation();
+            e.preventDefault();
+
+            let files = Array.from(e.dataTransfer.files);
+
+            let formData = new FormData();
+            files.forEach(file => {
+                formData.append('file', file);
+            });
+            const request = new XMLHttpRequest();
+            request.responseType = "json";
+            request.open("POST", "http://localhost:3000/upload");
+            request.send(formData);
+            request.onreadystatechange = () => {
+                if (request.readyState === XMLHttpRequest.DONE) {
+                    dropZone.style.background = 'aquamarine'
+                    console.log(request.response)
+                    let uploadedFiles = document.getElementById("uploadedFiles");
+                    uploadedFiles.innerHTML = '<td><h1>Uploaded files:</h1></td>';
+                    request.response.forEach(uploadedFile => {
+                        let tmpTr = document.createElement('tr');
+                        let tmpTd = document.createElement('td');
+                        tmpTr.appendChild(tmpTd);
+                        if (uploadedFile.type.startsWith('image')) {
+                            tmpTd.innerHTML = `<p><span class="material-icons-round">image</span>&nbsp;${uploadedFile.name}</p>`
+                        } else if (uploadedFile.type.startsWith('audio')) {
+                            tmpTd.innerHTML = `<p><span class="material-icons-round">audiotrack</span>&nbsp;${uploadedFile.name}</p>`
+                        } else {
+                            tmpTd.innerHTML = `<p><span class="material-icons-round">file_present</span>&nbsp;${uploadedFile.name}</p>`
+                        }
+                        uploadedFiles.appendChild(tmpTr);
+                    })
+                }
+            }
+
+        }
+
+        document.querySelector("#dropZone").ondragenter = function (e) {
+            dropZone.style.background = 'darkblue'
+            e.stopPropagation();
+            e.preventDefault();
+        }
+
+
+        document.querySelector("#dropZone").ondragover = function (e) {
+            console.log("drag over na divie")
+            dropZone.style.background = 'darkblue'
+            e.stopPropagation();
+            e.preventDefault();
+        }
+
+        document.querySelector("#dropZone").ondragleave = function (e) {
+            console.log("dragleave na divie")
+            dropZone.style.background = 'aquamarine'
+            e.stopPropagation();
+            e.preventDefault();
+
+        }
+
+    }
+</script>
+<body>
+<table>
+    <tr>
+        <td><h1>Instruction</h1></td>
+    </tr>
+    <tr>
+        <td>Drop files below to upload them
+        </td>
+    </tr>
+    <tr>
+        <td id="dropZone"><h1>Drop Files Here</h1></td>
+    </tr>
+</table>
+<table id="uploadedFiles">
+    <td><h1>Uploaded files:</h1></td>
+</table>
+</body>
+</html>
+
